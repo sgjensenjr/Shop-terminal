@@ -1,207 +1,152 @@
-import os
+import http.server
+import socketserver
+import sqlite3
 import json
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-from database import get_connection, init_db
-from seed_data import seed_blowers
+import os
+import seed_data
 
-# Ensure DB and seeds run automatically on start
-init_db()
-seed_blowers()
+PORT = int(os.environ.get('PORT', 8000))
+DB_FILE = 'shop_terminal.db'
 
-class InventoryAPIHandler(SimpleHTTPRequestHandler):
+if not os.path.exists(DB_FILE):
+    seed_data.seed()
+
+class ShopTerminalHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/' or self.path == '':
+        if self.path == '/':
             self.path = '/index.html'
+            return super().do_GET()
 
-        if self.path == '/api/models':
-            conn = get_connection()
+        if self.path == '/api/categories':
+            conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
-            cur.execute("""
-                SELECT e.*, COUNT(f.id) as unit_count
-                FROM equipment e
-                LEFT JOIN fleet_units f ON e.id = f.equipment_id
-                GROUP BY e.id
-                ORDER BY e.category, e.make, e.model
-            """)
-            models = [dict(row) for row in cur.fetchall()]
+            cur.execute("SELECT id, name, icon, image_url FROM categories")
+            rows = cur.fetchall()
             conn.close()
+            cats = [{"id": r[0], "name": r[1], "icon": r[2], "image_url": r[3]} for r in rows]
+            self.send_json(cats)
+            return
 
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(models).encode())
-
-        elif self.path.startswith('/api/units'):
-            equipment_id = self.path.split('equipment_id=')[-1] if 'equipment_id=' in self.path else None
-            unit_tag = self.path.split('unit_tag=')[-1] if 'unit_tag=' in self.path else None
-
-            conn = get_connection()
+        if self.path.startswith('/api/models'):
+            conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
-            if equipment_id:
-                cur.execute("SELECT * FROM fleet_units WHERE equipment_id = ? ORDER BY unit_tag", (equipment_id,))
-            elif unit_tag:
-                cur.execute("""
-                    SELECT f.*, e.category, e.make, e.model, e.image_url,
-                           e.oil_type, e.oil_capacity, e.fuel_mix, e.spark_plug_spec, e.valve_spec, e.notes as model_notes
-                    FROM fleet_units f
-                    JOIN equipment e ON f.equipment_id = e.id
-                    WHERE f.unit_tag = ?
-                """, (unit_tag,))
+            # Check for category filter e.g. /api/models?cat=1
+            cat_id = None
+            if '?cat=' in self.path:
+                cat_id = self.path.split('?cat=')[1]
+                cur.execute("SELECT id, category_id, make, model_number, fuel_spec, spark_plug, plug_gap, oil_spec, oil_capacity, valve_lash, diagram_url FROM models WHERE category_id = ?", (cat_id,))
             else:
-                cur.execute("SELECT * FROM fleet_units ORDER BY unit_tag")
-            rows = [dict(row) for row in cur.fetchall()]
+                cur.execute("SELECT id, category_id, make, model_number, fuel_spec, spark_plug, plug_gap, oil_spec, oil_capacity, valve_lash, diagram_url FROM models")
+            rows = cur.fetchall()
             conn.close()
+            models = [{
+                "id": r[0], "category_id": r[1], "make": r[2], "model_number": r[3],
+                "fuel_spec": r[4], "spark_plug": r[5], "plug_gap": r[6], "oil_spec": r[7],
+                "oil_capacity": r[8], "valve_lash": r[9], "diagram_url": r[10]
+            } for r in rows]
+            self.send_json(models)
+            return
 
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(rows).encode())
-
-        elif self.path.startswith('/api/assemblies'):
-            equipment_id = self.path.split('equipment_id=')[-1] if 'equipment_id=' in self.path else None
-            conn = get_connection()
+        if self.path.startswith('/api/model_detail'):
+            # e.g. /api/model_detail?id=1
+            model_id = self.path.split('?id=')[1]
+            conn = sqlite3.connect(DB_FILE)
             cur = conn.cursor()
-            if equipment_id:
-                cur.execute("""
-                    SELECT DISTINCT a.id, a.name
-                    FROM assemblies a
-                    JOIN equipment_parts ep ON a.id = ep.assembly_id
-                    WHERE ep.equipment_id = ?
-                    ORDER BY a.name
-                """, (equipment_id,))
-            else:
-                cur.execute("SELECT * FROM assemblies ORDER BY name")
-            rows = [dict(row) for row in cur.fetchall()]
+
+            cur.execute("SELECT id, category_id, make, model_number, fuel_spec, spark_plug, plug_gap, oil_spec, oil_capacity, valve_lash, diagram_url FROM models WHERE id = ?", (model_id,))
+            m = cur.fetchone()
+            if not m:
+                self.send_json({"error": "Model not found"}, status=404)
+                conn.close()
+                return
+
+            model_data = {
+                "id": m[0], "category_id": m[1], "make": m[2], "model_number": m[3],
+                "fuel_spec": m[4], "spark_plug": m[5], "plug_gap": m[6], "oil_spec": m[7],
+                "oil_capacity": m[8], "valve_lash": m[9], "diagram_url": m[10],
+                "assemblies": []
+            }
+
+            cur.execute("SELECT id, name FROM assemblies WHERE model_id = ?", (model_id,))
+            asm_rows = cur.fetchall()
+            for a in asm_rows:
+                asm_id, asm_name = a[0], a[1]
+                cur.execute("SELECT id, name, oem_number, cross_ref, fits_info, restock_url FROM parts WHERE assembly_id = ?", (asm_id,))
+                parts = [{
+                    "id": p[0], "name": p[1], "oem_number": p[2],
+                    "cross_ref": p[3], "fits_info": p[4], "restock_url": p[5]
+                } for p in cur.fetchall()]
+                model_data["assemblies"].append({
+                    "id": asm_id,
+                    "name": asm_name,
+                    "parts": parts
+                })
+
             conn.close()
+            self.send_json(model_data)
+            return
 
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(rows).encode())
-
-        elif self.path.startswith('/api/parts'):
-            query_params = dict(qp.split('=') for qp in self.path.split('?')[-1].split('&') if '=' in qp)
-            equipment_id = query_params.get('equipment_id')
-            assembly_id = query_params.get('assembly_id')
-
-            conn = get_connection()
-            cur = conn.cursor()
-            query = """
-                SELECT p.*, a.name as assembly_name
-                FROM parts p
-                JOIN equipment_parts ep ON p.id = ep.part_id
-                JOIN assemblies a ON ep.assembly_id = a.id
-                WHERE ep.equipment_id = ? AND ep.assembly_id = ?
-                ORDER BY p.name
-            """
-            cur.execute(query, (equipment_id, assembly_id))
-            rows = [dict(row) for row in cur.fetchall()]
-            conn.close()
-
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(rows).encode())
-
-        elif self.path.startswith('/api/maintenance'):
-            unit_id = self.path.split('unit_id=')[-1] if 'unit_id=' in self.path else None
-            conn = get_connection()
-            cur = conn.cursor()
-            cur.execute("""
-                SELECT * FROM maintenance_logs
-                WHERE unit_id = ?
-                ORDER BY service_date DESC, id DESC
-            """, (unit_id,))
-            rows = [dict(row) for row in cur.fetchall()]
-            conn.close()
-
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(rows).encode())
-
-        else:
-            super().do_GET()
+        return super().do_GET()
 
     def do_POST(self):
-        content_length = int(self.headers.get('Content-Length', 0))
-        post_data = self.rfile.read(content_length)
-        data = json.loads(post_data.decode('utf-8')) if post_data else {}
+        content_len = int(self.headers.get('Content-Length', 0))
+        post_body = self.rfile.read(content_len).decode('utf-8')
+        data = json.loads(post_body) if post_body else {}
 
-        conn = get_connection()
-        cur = conn.cursor()
-
-        if self.path == '/api/equipment/add':
-            cur.execute("""
-                INSERT INTO equipment (category, make, model, image_url, oil_type, fuel_mix, spark_plug_spec, valve_spec, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                data.get('category'), data.get('make'), data.get('model'),
-                data.get('image_url') or 'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=200&h=200&fit=crop',
-                data.get('oil_type'), data.get('fuel_mix'), data.get('spark_plug_spec'), data.get('valve_spec'),
-                data.get('notes', '')
+        # 1-Click Import of a New Model Blueprint
+        if self.path == '/api/import_model':
+            conn = sqlite3.connect(DB_FILE)
+            cur = conn.cursor()
+            cur.execute('''
+                INSERT INTO models (category_id, make, model_number, fuel_spec, spark_plug, plug_gap, oil_spec, oil_capacity, valve_lash, diagram_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                data.get('category_id', 1),
+                data.get('make', ''),
+                data.get('model_number', ''),
+                data.get('fuel_spec', ''),
+                data.get('spark_plug', ''),
+                data.get('plug_gap', ''),
+                data.get('oil_spec', ''),
+                data.get('oil_capacity', ''),
+                data.get('valve_lash', ''),
+                data.get('diagram_url', '')
             ))
-            eq_id = cur.lastrowid
-            if data.get('unit_tag'):
-                cur.execute("INSERT INTO fleet_units (equipment_id, unit_tag, status) VALUES (?, ?, 'In Service')",
-                            (eq_id, data.get('unit_tag')))
-            conn.commit()
+            new_model_id = cur.lastrowid
 
-        elif self.path == '/api/models/update_notes':
-            cur.execute("UPDATE equipment SET notes = ? WHERE id = ?", (data.get('notes', '').strip(), data.get('equipment_id')))
-            conn.commit()
+            for asm in data.get('assemblies', []):
+                cur.execute("INSERT INTO assemblies (model_id, name) VALUES (?, ?)", (new_model_id, asm.get('name', 'General Assembly')))
+                asm_id = cur.lastrowid
+                for p in asm.get('parts', []):
+                    cur.execute('''
+                        INSERT INTO parts (assembly_id, name, oem_number, cross_ref, fits_info, restock_url)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (
+                        asm_id,
+                        p.get('name', ''),
+                        p.get('oem_number', ''),
+                        p.get('cross_ref', ''),
+                        p.get('fits_info', ''),
+                        p.get('restock_url', '')
+                    ))
 
-        elif self.path == '/api/units/add':
-            cur.execute("""
-                INSERT INTO fleet_units (equipment_id, unit_tag, status, notes)
-                VALUES (?, ?, 'In Service', ?)
-            """, (data.get('equipment_id'), data.get('unit_tag'), data.get('notes', '')))
             conn.commit()
+            conn.close()
+            self.send_json({"status": "success", "model_id": new_model_id})
+            return
 
-        elif self.path == '/api/parts/add':
-            cur.execute("""
-                INSERT INTO parts (name, oem_number, hardware_spec, location, stock_qty, reorder_min, supplier_name, reorder_url)
-                VALUES (?, ?, ?, ?, ?, 1, ?, ?)
-            """, (
-                data.get('name'), data.get('oem_number'), data.get('hardware_spec'),
-                data.get('location'), int(data.get('stock_qty', 0)),
-                data.get('supplier_name'), data.get('reorder_url')
-            ))
-            part_id = cur.lastrowid
-            cur.execute("""
-                INSERT INTO equipment_parts (equipment_id, assembly_id, part_id)
-                VALUES (?, ?, ?)
-            """, (data.get('equipment_id'), data.get('assembly_id'), part_id))
-            conn.commit()
+        self.send_json({"error": "Endpoint not found"}, status=404)
 
-        elif self.path == '/api/parts/adjust_stock':
-            cur.execute("UPDATE parts SET stock_qty = MAX(0, stock_qty + ?) WHERE id = ?", (data.get('delta'), data.get('part_id')))
-            conn.commit()
-
-        elif self.path == '/api/maintenance/add':
-            cur.execute("""
-                INSERT INTO maintenance_logs (unit_id, work_performed, parts_used, tech_notes)
-                VALUES (?, ?, ?, ?)
-            """, (data.get('unit_id'), data.get('work_performed'), data.get('parts_used'), data.get('tech_notes')))
-            conn.commit()
-
-        elif self.path == '/api/units/delete':
-            cur.execute("DELETE FROM fleet_units WHERE id = ?", (data.get('unit_id'),))
-            conn.commit()
-
-        conn.close()
-        self.send_response(200)
+    def send_json(self, payload, status=200):
+        body = json.dumps(payload).encode('utf-8')
+        self.send_response(status)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(json.dumps({"success": True}).encode())
-
-def run_server():
-    # Cloud hosts provide the PORT environment variable
-    port = int(os.environ.get('PORT', 8000))
-    server_address = ('0.0.0.0', port)
-    httpd = HTTPServer(server_address, InventoryAPIHandler)
-    print(f"Shop terminal running on port {port}")
-    httpd.serve_forever()
+        self.wfile.write(body)
 
 if __name__ == '__main__':
-    run_server()
+    with socketserver.TCPServer(('', PORT), ShopTerminalHandler) as httpd:
+        print(f"Shop Terminal server running on port {PORT}")
+        httpd.serve_forever()
