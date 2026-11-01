@@ -3,6 +3,8 @@ import socketserver
 import os
 
 PORT = int(os.environ.get('PORT', 8000))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CATALOG_PATH = os.path.join(BASE_DIR, 'equipment_catalog.json')
 
 class ShopTerminalHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -13,8 +15,15 @@ class ShopTerminalHandler(http.server.SimpleHTTPRequestHandler):
 
         # API route to fetch the full equipment catalog
         if self.path == '/api/catalog':
+            if not os.path.exists(CATALOG_PATH):
+                self.send_response(404)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"error": "Catalog file not found"}')
+                return
+
             try:
-                with open('equipment_catalog.json', 'rb') as f:
+                with open(CATALOG_PATH, 'rb') as f:
                     content = f.read()
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
@@ -24,6 +33,7 @@ class ShopTerminalHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(content)
             except Exception as e:
                 self.send_response(500)
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(str(e).encode('utf-8'))
             return
