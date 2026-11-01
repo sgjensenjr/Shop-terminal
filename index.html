@@ -2,360 +2,218 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shop Fleet Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shop Field Terminal</title>
   <style>
-    :root {
-      --bg: #0b1329;
-      --card-bg: #1e293b;
-      --card-alt: #162032;
-      --border: #334155;
-      --accent: #38bdf8;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --green: #22c55e;
-      --red: #ef4444;
-      --rack-chip: #0284c7;
-      --drawer-chip: #d97706;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; padding-bottom: 40px; }
+    header { background: #1e293b; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 50; }
+    h1 { font-size: 1.1rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .back-btn { background: #334155; color: #f8fafc; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: none; }
+    .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+    
+    /* Category Grid */
+    .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .cat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px; }
+    .cat-card:active { background: #334155; }
+    .cat-icon { font-size: 2rem; margin-bottom: 8px; }
+    .cat-title { font-size: 0.95rem; font-weight: 600; color: #f1f5f9; }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 12px; }
+    /* Model Cards */
+    .model-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .model-card:active { background: #334155; }
+    .model-make { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
+    .model-name { font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-top: 2px; }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 12px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    h1 { font-size: 1.15rem; font-weight: 700; }
-    .status-badge {
-      background: #064e3b;
-      color: #6ee7b7;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
+    /* Spec Hub */
+    .spec-box { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+    .spec-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .diagram-btn { background: #0284c7; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .spec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.85rem; }
+    .spec-item { background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155; }
+    .spec-label { color: #94a3b8; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .spec-val { color: #38bdf8; font-weight: 600; margin-top: 2px; }
 
-    .hidden { display: none !important; }
+    /* Assemblies & Parts */
+    .asm-title { font-size: 0.9rem; text-transform: uppercase; font-weight: 800; color: #cbd5e1; margin: 16px 0 8px 0; letter-spacing: 0.5px; }
+    .part-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+    .part-name { font-size: 0.95rem; font-weight: 700; color: #f8fafc; }
+    .part-nums { font-size: 0.8rem; color: #94a3b8; margin: 4px 0; }
+    .part-nums strong { color: #38bdf8; }
+    .part-fits { font-size: 0.75rem; color: #10b981; font-weight: 600; background: #064e3b; display: inline-block; padding: 2px 6px; border-radius: 4px; margin-bottom: 8px; }
+    .btn-row { display: flex; gap: 8px; margin-top: 6px; }
+    .buy-link { background: #22c55e; color: #0f172a; font-weight: 700; font-size: 0.75rem; text-decoration: none; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; }
 
-    .nav-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      gap: 8px;
-    }
-    .btn-action {
-      background: var(--accent);
-      color: #0b1329;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn-back {
-      background: #334155;
-      color: #fff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-danger {
-      background: rgba(239, 68, 68, 0.15);
-      color: #f87171;
-      border: 1px solid #ef4444;
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .section-title {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
-    }
-
-    /* HARDCODED 4X4 CATEGORY GRID (NEVER BLANK) */
-    .category-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    .cat-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px 4px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
-      text-align: center;
-      min-height: 80px;
-    }
-    .cat-btn:active { border-color: var(--accent); background: var(--card-alt); }
-    .cat-icon { font-size: 1.4rem; }
-    .cat-name { font-size: 0.72rem; font-weight: 700; color: #fff; line-height: 1.1; }
-
-    /* MODEL CARDS (LAYER 2) */
-    .model-grid { display: flex; flex-direction: column; gap: 8px; }
-    .model-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-    }
-    .model-info { display: flex; align-items: center; gap: 12px; }
-    .bubble-photo {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--accent);
-      background: #334155;
-    }
-
-    /* PHYSICAL UNITS (LAYER 3) */
-    .unit-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    .unit-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-      cursor: pointer;
-    }
-    .unit-box:active { border-color: var(--accent); }
-    .unit-tag-lg { font-size: 1.3rem; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
-    .unit-status-chip {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 9999px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      background: #0f766e;
-      color: #ccfbf1;
-    }
-
-    /* SPECS & DASHBOARD (LAYER 4) */
-    .spec-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .spec-box {
-      background: var(--card-alt);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 8px;
-      font-size: 0.75rem;
-    }
-    .spec-label { color: var(--text-muted); font-size: 0.65rem; text-transform: uppercase; margin-bottom: 2px; }
-    .spec-val { font-weight: 700; color: #fff; }
-
-    /* TEARDOWN ASSEMBLY GRID (LAYER 4) */
-    .assembly-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .assembly-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      color: #fff;
-    }
-    .assembly-card:active { border-color: var(--accent); background: var(--card-alt); }
-
-    /* PARTS GRID (LAYER 5) */
-    .part-grid { display: flex; flex-direction: column; gap: 8px; }
-    .part-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
-    }
-    .part-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
-    .chip {
-      padding: 3px 8px;
-      border-radius: 9999px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.15);
-    }
-    .rack { background: var(--rack-chip); }
-    .drawer { background: var(--drawer-chip); }
-    .part-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-      padding-top: 6px;
-      border-top: 1px solid var(--border);
-    }
-    .stock-btn {
-      background: #334155;
-      color: #fff;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.75rem;
-      cursor: pointer;
-    }
-
-    /* SERVICE LOGS */
-    .form-input {
-      width: 100%;
-      background: #1e293b;
-      border: 1px solid var(--border);
-      color: #fff;
-      padding: 7px 10px;
-      border-radius: 8px;
-      margin-bottom: 6px;
-      font-size: 0.8rem;
-    }
-    .btn-save {
-      background: var(--accent);
-      color: #0b1329;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-weight: 700;
-      width: 100%;
-      cursor: pointer;
-    }
-
-    /* MODAL */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px;
-      z-index: 100;
-    }
-    .modal-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
-      width: 100%;
-      max-width: 440px;
-    }
-    .btn-danger-solid {
-      background: var(--red);
-      color: #fff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-weight: 700;
-      width: 100%;
-      cursor: pointer;
-    }
-    .btn-danger-solid:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+    /* Modal for Quick Blueprint Import */
+    .import-btn { background: #475569; color: #f8fafc; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+    #import-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+    .modal-content { background: #1e293b; padding: 16px; border-radius: 10px; width: 100%; max-width: 480px; }
+    textarea { width: 100%; height: 160px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; padding: 8px; font-family: monospace; font-size: 0.75rem; margin: 10px 0; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Shop Terminal</h1>
-    <div class="status-badge">● Live</div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button id="back-btn" class="back-btn" onclick="navigateBack()">← Back</button>
+      <h1 id="header-title">🔧 Shop Manual</h1>
+    </div>
+    <button class="import-btn" onclick="openImportModal()">+ Import Model</button>
   </header>
 
-  <!-- LAYER 1: CATEGORY GRID (RAW HTML - NEVER BLANKS OUT) -->
-  <section id="layer-categories">
-    <div class="nav-bar">
-      <div class="section-title" style="margin-bottom:0;">Equipment Categories</div>
-      <button class="btn-action" onclick="openAddModal()">+ Model</button>
-    </div>
-    <div class="category-grid">
-      <div class="cat-btn" onclick="selectCategory('Blowers')">
-        <div class="cat-icon">💨</div>
-        <div class="cat-name">Blowers</div>
-      </div>
-      <div class="cat-btn" onclick="selectCategory('Trimmers')">
-        <div class="cat-icon">✂️</div>
-        <div class="cat-name">Trimmers</div>
-      </div>
-      <div class="cat-btn" onclick="selectCategory('Mowers')">
-        <div class="cat-icon">🚜</div>
-        <div class="cat-name">Mowers</div>
-      </div>
-      <div class="cat-btn" onclick="selectCategory('Edgers')">
-        <div class="cat-icon">🌱</div>
-        <div class="cat-name">Edgers</div>
-      </div>
-      <div class="cat-btn" onclick="selectCategory('Hedgers')">
-        <div class="cat-icon">🌿</div>
-        <div class="cat-name">Hedgers</div>
-      </div>
-      <div class="cat-btn" onclick="selectCategory('Concrete Saws')">
-        <div class="cat-icon">⚙️</div>
-        <div class="cat-name">Saws</div>
-      </div>
-      <div class="cat-btn" onclick="selectCategory('Dethatchers')">
-        <div class="cat-icon">⛏️</div>
-        <div class="cat-name">Aerators</div>
-      </div>
-      <div class="cat-btn" onclick="selectCategory('Compactors')">
-        <div class="cat-icon">🔨</div>
-        <div class="cat-name">Compactors</div>
-      </div>
-    </div>
-  </section>
+  <div class="container">
+    <div id="view-categories" class="cat-grid"></div>
+    <div id="view-models" style="display: none;"></div>
+    <div id="view-detail" style="display: none;"></div>
+  </div>
 
-  <!-- LAYER 2: MODELS IN CATEGORY -->
-  <section id="layer-models" class="hidden">
-    <div class="nav-bar">
-      <button class="btn-back" onclick="showCategories()">← Categories</button>
-      <button class="btn-action" onclick="openAddModal()">+ Model</button>
+  <!-- 1-Click Import Modal -->
+  <div id="import-modal">
+    <div class="modal-content">
+      <h3 style="color:#38bdf8;">Paste Model Blueprint</h3>
+      <p style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">Paste the blueprint JSON generated here to instantly add the model, specs, and parts.</p>
+      <textarea id="import-json" placeholder="Paste blueprint code here..."></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="import-btn" onclick="closeImportModal()">Cancel</button>
+        <button class="diagram-btn" onclick="submitImport()">Save to Fleet</button>
+      </div>
     </div>
-    <div class="section-title" id="models-title">Equipment Models</div>
-    <div class="model-grid" id="models-container"></div>
-  </section>
+  </div>
 
-  <!-- LAYER 3: PHYSICAL UNITS (BP-01, BP-02) -->
-  <section id="layer-units" class="hidden">
-    <div class="nav-bar">
-      <button class="btn-back" onclick="showModels()">← Models</button>
-      <button class="btn-action" onclick="openAddUnitModal()">+ Unit Tag</button>
-    </div>
-    <div class="section-title" id="units-title">Physical Shop Units</div>
+  <script>
+    let currentView = 'categories';
+    let currentCategoryId = null;
+
+    async function loadCategories() {
+      const res = await fetch('/api/categories');
+      const cats = await res.json();
+      const container = document.getElementById('view-categories');
+      container.innerHTML = '';
+      cats.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'cat-card';
+        card.onclick = () => selectCategory(c.id, c.name);
+        card.innerHTML = `
+          <div class="cat-icon">${c.icon || '🔧'}</div>
+          <div class="cat-title">${c.name}</div>
+        `;
+        container.appendChild(card);
+      });
+      showView('categories');
+    }
+
+    async function selectCategory(catId, catName) {
+      currentCategoryId = catId;
+      document.getElementById('header-title').innerText = catName;
+      const res = await fetch(`/api/models?cat=${catId}`);
+      const models = await res.json();
+      const container = document.getElementById('view-models');
+      container.innerHTML = '';
+      if(models.length === 0) {
+        container.innerHTML = '<p style="color:#94a3b8; padding:20px; text-align:center;">No models in this category yet. Tap "+ Import Model" above to add one.</p>';
+      } else {
+        models.forEach(m => {
+          const card = document.createElement('div');
+          card.className = 'model-card';
+          card.onclick = () => loadModelDetail(m.id);
+          card.innerHTML = `
+            <div>
+              <div class="model-make">${m.make}</div>
+              <div class="model-name">${m.model_number}</div>
+            </div>
+            <div style="color:#38bdf8; font-size:1.2rem;">→</div>
+          `;
+          container.appendChild(card);
+        });
+      }
+      showView('models');
+    }
+
+    async function loadModelDetail(modelId) {
+      const res = await fetch(`/api/model_detail?id=${modelId}`);
+      const m = await res.json();
+      document.getElementById('header-title').innerText = m.model_number;
+      const container = document.getElementById('view-detail');
+      
+      let html = `
+        <div class="spec-box">
+          <div class="spec-header">
+            <div>
+              <div class="model-make">${m.make}</div>
+              <h2 style="font-size:1.15rem; color:#f8fafc;">${m.model_number}</h2>
+            </div>
+            ${m.diagram_url ? `<a href="${m.diagram_url}" target="_blank" class="diagram-btn">📖 Full Schematics</a>` : ''}
+          </div>
+          <div class="spec-grid">
+            <div class="spec-item"><div class="spec-label">Fuel Spec</div><div class="spec-val">${m.fuel_spec || 'N/A'}</div></div>
+            <div class="spec-item"><div class="spec-label">Spark Plug & Gap</div><div class="spec-val">${m.spark_plug} (${m.plug_gap})</div></div>
+            <div class="spec-item"><div class="spec-label">Engine Oil</div><div class="spec-val">${m.oil_spec} ${m.oil_capacity ? '('+m.oil_capacity+')' : ''}</div></div>
+            <div class="spec-item"><div class="spec-label">Valve Lash</div><div class="spec-val">${m.valve_lash || 'N/A'}</div></div>
+          </div>
+        </div>
+      `;
+
+      m.assemblies.forEach(a => {
+        html += `<div class="asm-title">${a.name}</div>`;
+        a.parts.forEach(p => {
+          html += `
+            <div class="part-card">
+              <div class="part-name">${p.name}</div>
+              <div class="part-nums">OEM: <strong>${p.oem_number}</strong> | Cross: <strong>${p.cross_ref || 'N/A'}</strong></div>
+              ${p.fits_info ? `<div class="part-fits">Fits: ${p.fits_info}</div>` : ''}
+              ${p.restock_url ? `<div><a href="${p.restock_url}" target="_blank" class="buy-link">🔍 Verify Photo & Buy</a></div>` : ''}
+            </div>
+          `;
+        });
+      });
+
+      container.innerHTML = html;
+      showView('detail');
+    }
+
+    function showView(view) {
+      currentView = view;
+      document.getElementById('view-categories').style.display = view === 'categories' ? 'grid' : 'none';
+      document.getElementById('view-models').style.display = view === 'models' ? 'block' : 'none';
+      document.getElementById('view-detail').style.display = view === 'detail' ? 'block' : 'none';
+      document.getElementById('back-btn').style.display = view === 'categories' ? 'none' : 'block';
+      if (view === 'categories') document.getElementById('header-title').innerText = '🔧 Shop Manual';
+    }
+
+    function navigateBack() {
+      if (currentView === 'detail') {
+        selectCategory(currentCategoryId, document.getElementById('header-title').innerText);
+      } else if (currentView === 'models') {
+        loadCategories();
+      }
+    }
+
+    function openImportModal() { document.getElementById('import-modal').style.display = 'flex'; }
+    function closeImportModal() { document.getElementById('import-modal').style.display = 'none'; }
+
+    async function submitImport() {
+      const raw = document.getElementById('import-json').value;
+      if (!raw) return;
+      try {
+        const payload = JSON.parse(raw);
+        await fetch('/api/import_model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        closeImportModal();
+        document.getElementById('import-json').value = '';
+        loadCategories();
+      } catch (err) {
+        alert("Invalid JSON format. Make sure you pasted the complete blueprint.");
+      }
+    }
+
+    loadCategories();
+  </script>
+</body>
+</html>
+ion-title" id="units-title">Physical Shop Units</div>
     <div class="unit-grid" id="units-container"></div>
   </section>
 
