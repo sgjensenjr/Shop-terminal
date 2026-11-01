@@ -6,51 +6,174 @@
   <title>Shop Field Terminal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; padding-bottom: 40px; }
-    header { background: #1e293b; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 50; }
-    h1 { font-size: 1.1rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-    .back-btn { background: #334155; color: #f8fafc; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: none; }
+    body { background-color: #0b0f19; color: #f1f5f9; padding-bottom: 50px; }
+    header { background: #131c2e; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1e293b; position: sticky; top: 0; z-index: 50; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    h1 { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.5px; color: #38bdf8; text-transform: uppercase; }
+    .back-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: none; text-transform: uppercase; }
+    .back-btn:active { background: #334155; color: #f8fafc; }
     .container { padding: 16px; max-width: 600px; margin: 0 auto; }
     
     /* Category Grid */
     .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .cat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px; }
-    .cat-card:active { background: #334155; }
-    .cat-icon { font-size: 2rem; margin-bottom: 8px; }
-    .cat-title { font-size: 0.95rem; font-weight: 600; color: #f1f5f9; }
+    .cat-card { background: #131c2e; border: 1px solid #1e293b; border-radius: 8px; padding: 22px 14px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 85px; transition: border-color 0.15s; }
+    .cat-card:active { background: #1e293b; border-color: #38bdf8; }
+    .cat-title { font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #f1f5f9; }
 
     /* Model Cards */
-    .model-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-    .model-card:active { background: #334155; }
-    .model-make { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
-    .model-name { font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-top: 2px; }
+    .model-card { background: #131c2e; border: 1px solid #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .model-card:active { border-color: #38bdf8; background: #1e293b; }
+    .model-make { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 1px; }
+    .model-name { font-size: 1.05rem; font-weight: 800; color: #f8fafc; margin-top: 3px; }
 
     /* Spec Hub */
-    .spec-box { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
-    .spec-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-    .diagram-btn { background: #0284c7; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-    .spec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.85rem; }
-    .spec-item { background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155; }
-    .spec-label { color: #94a3b8; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-    .spec-val { color: #38bdf8; font-weight: 600; margin-top: 2px; }
+    .spec-box { background: #131c2e; border: 1px solid #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .spec-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .diagram-btn { background: #0284c7; color: #ffffff; border: none; padding: 9px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
+    .spec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .spec-item { background: #0b0f19; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; }
+    .spec-label { color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .spec-val { color: #38bdf8; font-weight: 700; font-size: 0.85rem; margin-top: 3px; }
 
     /* Assemblies & Parts */
-    .asm-title { font-size: 0.9rem; text-transform: uppercase; font-weight: 800; color: #cbd5e1; margin: 16px 0 8px 0; letter-spacing: 0.5px; }
-    .part-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
-    .part-name { font-size: 0.95rem; font-weight: 700; color: #f8fafc; }
-    .part-nums { font-size: 0.8rem; color: #94a3b8; margin: 4px 0; }
-    .part-nums strong { color: #38bdf8; }
-    .part-fits { font-size: 0.75rem; color: #10b981; font-weight: 600; background: #064e3b; display: inline-block; padding: 2px 6px; border-radius: 4px; margin-bottom: 8px; }
-    .buy-link { background: #22c55e; color: #0f172a; font-weight: 700; font-size: 0.75rem; text-decoration: none; padding: 6px 12px; border-radius: 4px; display: inline-flex; align-items: center; }
-
-    /* Modal for Quick Blueprint Import */
-    .import-btn { background: #475569; color: #f8fafc; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-    #import-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: #1e293b; padding: 16px; border-radius: 10px; width: 100%; max-width: 480px; }
-    textarea { width: 100%; height: 160px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; padding: 8px; font-family: monospace; font-size: 0.75rem; margin: 10px 0; }
+    .asm-title { font-size: 0.8rem; text-transform: uppercase; font-weight: 900; color: #94a3b8; margin: 20px 0 10px 0; letter-spacing: 1px; border-left: 3px solid #38bdf8; padding-left: 8px; }
+    .part-card { background: #131c2e; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .part-name { font-size: 0.95rem; font-weight: 800; color: #f8fafc; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .badge { font-size: 0.75rem; font-weight: 700; padding: 3px 7px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .badge-oem { background: #1e293b; color: #f8fafc; border: 1px solid #334155; }
+    .badge-cross { background: #0284c7; color: #ffffff; }
+    .part-fits { font-size: 0.75rem; color: #10b981; font-weight: 600; background: #064e3b; padding: 4px 8px; border-radius: 4px; margin-bottom: 10px; display: inline-block; }
+    .btn-row { margin-top: 6px; }
+    .buy-link { background: #22c55e; color: #0b0f19; font-weight: 800; font-size: 0.75rem; text-decoration: none; padding: 7px 12px; border-radius: 5px; display: inline-flex; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
 
   <header>
-    <div style="display: flex; align-items: center; gap: 8
+    <div class="header-left">
+      <button id="back-btn" class="back-btn" onclick="navigateBack()">← BACK</button>
+      <h1 id="header-title">SHOP MANUAL</h1>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="view-categories" class="cat-grid"></div>
+    <div id="view-models" style="display: none;"></div>
+    <div id="view-detail" style="display: none;"></div>
+  </div>
+
+  <script>
+    let catalogData = [];
+    let currentView = 'categories';
+    let selectedCategory = null;
+
+    async function init() {
+      try {
+        const res = await fetch('/api/catalog');
+        catalogData = await res.json();
+        renderCategories();
+      } catch (e) {
+        document.getElementById('view-categories').innerHTML = '<p style="color:#ef4444; padding:20px; text-align:center;">Failed to load catalog data.</p>';
+      }
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('view-categories');
+      container.innerHTML = '';
+      catalogData.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'cat-card';
+        card.onclick = () => selectCategory(c);
+        card.innerHTML = `<div class="cat-title">${c.category}</div>`;
+        container.appendChild(card);
+      });
+      showView('categories');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      document.getElementById('header-title').innerText = cat.category;
+      const container = document.getElementById('view-models');
+      container.innerHTML = '';
+      
+      cat.models.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'model-card';
+        card.onclick = () => renderModelDetail(m);
+        card.innerHTML = `
+          <div>
+            <div class="model-make">${m.make}</div>
+            <div class="model-name">${m.model}</div>
+          </div>
+          <div style="color:#38bdf8; font-weight:bold; font-size:1.2rem;">→</div>
+        `;
+        container.appendChild(card);
+      });
+      showView('models');
+    }
+
+    function renderModelDetail(m) {
+      document.getElementById('header-title').innerText = m.model;
+      const container = document.getElementById('view-detail');
+      
+      let html = `
+        <div class="spec-box">
+          <div class="spec-top">
+            <div>
+              <div class="model-make">${m.make}</div>
+              <h2 style="font-size:1.15rem; color:#f8fafc; font-weight:800; margin-top:2px;">${m.model}</h2>
+            </div>
+            ${m.diagram_url ? `<a href="${m.diagram_url}" target="_blank" class="diagram-btn">SCHEMATICS ↗</a>` : ''}
+          </div>
+          <div class="spec-grid">
+            <div class="spec-item"><div class="spec-label">Fuel Spec</div><div class="spec-val">${m.fuel_spec || 'N/A'}</div></div>
+            <div class="spec-item"><div class="spec-label">Spark Plug & Gap</div><div class="spec-val">${m.spark_plug}</div></div>
+            <div class="spec-item"><div class="spec-label">Oil Spec</div><div class="spec-val">${m.oil_spec} ${m.oil_capacity ? '('+m.oil_capacity+')' : ''}</div></div>
+            <div class="spec-item"><div class="spec-label">Valve Lash</div><div class="spec-val">${m.valve_lash || 'N/A'}</div></div>
+          </div>
+        </div>
+      `;
+
+      m.assemblies.forEach(a => {
+        html += `<div class="asm-title">${a.name}</div>`;
+        a.parts.forEach(p => {
+          html += `
+            <div class="part-card">
+              <div class="part-name">${p.name}</div>
+              <div class="badge-row">
+                <span class="badge badge-oem">OEM: ${p.oem}</span>
+                ${p.cross_ref ? `<span class="badge badge-cross">${p.cross_ref}</span>` : ''}
+              </div>
+              ${p.fits ? `<div><span class="part-fits">FITS: ${p.fits}</span></div>` : ''}
+              ${p.url ? `<div class="btn-row"><a href="${p.url}" target="_blank" class="buy-link">VERIFY PHOTO & BUY ↗</a></div>` : ''}
+            </div>
+          `;
+        });
+      });
+
+      container.innerHTML = html;
+      showView('detail');
+    }
+
+    function showView(view) {
+      currentView = view;
+      document.getElementById('view-categories').style.display = view === 'categories' ? 'grid' : 'none';
+      document.getElementById('view-models').style.display = view === 'models' ? 'block' : 'none';
+      document.getElementById('view-detail').style.display = view === 'detail' ? 'block' : 'none';
+      document.getElementById('back-btn').style.display = view === 'categories' ? 'none' : 'block';
+      if (view === 'categories') document.getElementById('header-title').innerText = 'SHOP MANUAL';
+    }
+
+    function navigateBack() {
+      if (currentView === 'detail') {
+        selectCategory(selectedCategory);
+      } else if (currentView === 'models') {
+        renderCategories();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
