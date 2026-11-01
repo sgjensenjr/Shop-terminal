@@ -64,7 +64,6 @@
   </div>
 
   <script>
-    // HARDCODED IN-MEMORY DATA: No API calls, no network failure possible
     const catalogData = [
       {
         "category": "Blowers",
@@ -317,4 +316,184 @@
                     "oem": "49019-0027",
                     "cross_ref": "Stens: 120-562",
                     "fits": "Fits 1/4 in and 5/16 in fuel lines",
-                    "url": "
+                    "url": "https://www.amazon.com/dp/B0018TY304"
+                  }
+                ]
+              },
+              {
+                "name": "Brakes, Deck & Drive",
+                "parts": [
+                  {
+                    "name": "Tire-Scrub Brake Spring",
+                    "oem": "109-3893",
+                    "cross_ref": "Exmark: 1-633131",
+                    "fits": "Compression spring for tire-lock manual parking brake",
+                    "url": "https://www.partstree.com/parts/exmark-109-3893"
+                  },
+                  {
+                    "name": "60-Inch Deck Drive Belt",
+                    "oem": "109-4113",
+                    "cross_ref": "Stens: 265-202",
+                    "fits": "Exmark Lazer Z 60 in UltraCut series deck",
+                    "url": "https://www.partstree.com/parts/exmark-109-4113"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "Compactors & Turf",
+        "models": [
+          {
+            "id": "honda-gx160-gx200",
+            "make": "Honda Powered",
+            "model": "Plate Compactor / Trencher (GX160 / GX200)",
+            "fuel_spec": "87 Octane (Ethanol-Free preferred)",
+            "spark_plug": "NGK BPR6ES (Gap: 0.030 in / 0.75 mm)",
+            "oil_spec": "10W-30 Motor Oil",
+            "oil_capacity": "0.61 qt (20 oz)",
+            "valve_lash": "Intake: 0.006 in | Exhaust: 0.008 in Cold",
+            "diagram_url": "https://www.partstree.com/models/gx160-ut2-qx2-honda-engine-made-in-thailand-sn-gcbct-1000001",
+            "assemblies": [
+              {
+                "name": "Engine Service & Filters",
+                "parts": [
+                  {
+                    "name": "Dual Element Air Filter",
+                    "oem": "17210-ZE1-822",
+                    "cross_ref": "Stens: 100-012 | Wix: 42709",
+                    "fits": "Honda GX120, GX160, GX200, Plate Compactors, Aerators",
+                    "url": "https://www.partstree.com/parts/honda-17210-ze1-822"
+                  },
+                  {
+                    "name": "Complete Carburetor",
+                    "oem": "16100-ZH8-W61",
+                    "cross_ref": "Stens: 520-718",
+                    "fits": "Honda GX160 5.5HP horizontal engines",
+                    "url": "https://www.amazon.com/dp/B00A85H95G"
+                  },
+                  {
+                    "name": "Recoil Starter Assembly",
+                    "oem": "28400-ZH8-013YA",
+                    "cross_ref": "Stens: 150-703",
+                    "fits": "Universal recoil pull starter for GX160 / GX200",
+                    "url": "https://www.amazon.com/dp/B005477L56"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    let currentView = 'categories';
+    let selectedCategory = null;
+
+    function renderCategories() {
+      const container = document.getElementById('view-categories');
+      if (!container) return;
+      container.innerHTML = '';
+      catalogData.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'cat-card';
+        card.onclick = () => selectCategory(c);
+        card.innerHTML = `<div class="cat-title">${c.category}</div>`;
+        container.appendChild(card);
+      });
+      showView('categories');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      document.getElementById('header-title').innerText = cat.category;
+      const container = document.getElementById('view-models');
+      container.innerHTML = '';
+      
+      cat.models.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'model-card';
+        card.onclick = () => renderModelDetail(m);
+        card.innerHTML = `
+          <div>
+            <div class="model-make">${m.make}</div>
+            <div class="model-name">${m.model}</div>
+          </div>
+          <div style="color:#38bdf8; font-weight:bold; font-size:1.2rem;">→</div>
+        `;
+        container.appendChild(card);
+      });
+      showView('models');
+    }
+
+    function renderModelDetail(m) {
+      document.getElementById('header-title').innerText = m.model;
+      const container = document.getElementById('view-detail');
+      
+      let html = `
+        <div class="spec-box">
+          <div class="spec-top">
+            <div>
+              <div class="model-make">${m.make}</div>
+              <h2 style="font-size:1.15rem; color:#f8fafc; font-weight:800; margin-top:2px;">${m.model}</h2>
+            </div>
+            ${m.diagram_url ? `<a href="${m.diagram_url}" target="_blank" class="diagram-btn">SCHEMATICS ↗</a>` : ''}
+          </div>
+          <div class="spec-grid">
+            <div class="spec-item"><div class="spec-label">Fuel Spec</div><div class="spec-val">${m.fuel_spec || 'N/A'}</div></div>
+            <div class="spec-item"><div class="spec-label">Spark Plug & Gap</div><div class="spec-val">${m.spark_plug}</div></div>
+            <div class="spec-item"><div class="spec-label">Oil Spec</div><div class="spec-val">${m.oil_spec} ${m.oil_capacity ? '('+m.oil_capacity+')' : ''}</div></div>
+            <div class="spec-item"><div class="spec-label">Valve Lash</div><div class="spec-val">${m.valve_lash || 'N/A'}</div></div>
+          </div>
+        </div>
+      `;
+
+      m.assemblies.forEach(a => {
+        html += `<div class="asm-title">${a.name}</div>`;
+        a.parts.forEach(p => {
+          html += `
+            <div class="part-card">
+              <div class="part-name">${p.name}</div>
+              <div class="badge-row">
+                <span class="badge badge-oem">OEM: ${p.oem}</span>
+                ${p.cross_ref ? `<span class="badge badge-cross">${p.cross_ref}</span>` : ''}
+              </div>
+              ${p.fits ? `<div><span class="part-fits">FITS: ${p.fits}</span></div>` : ''}
+              ${p.url ? `<div class="btn-row"><a href="${p.url}" target="_blank" class="buy-link">VERIFY PHOTO & BUY ↗</a></div>` : ''}
+            </div>
+          `;
+        });
+      });
+
+      container.innerHTML = html;
+      showView('detail');
+    }
+
+    function showView(view) {
+      currentView = view;
+      document.getElementById('view-categories').style.display = view === 'categories' ? 'grid' : 'none';
+      document.getElementById('view-models').style.display = view === 'models' ? 'block' : 'none';
+      document.getElementById('view-detail').style.display = view === 'detail' ? 'block' : 'none';
+      document.getElementById('back-btn').style.display = view === 'categories' ? 'none' : 'block';
+      if (view === 'categories') document.getElementById('header-title').innerText = 'SHOP MANUAL';
+    }
+
+    function navigateBack() {
+      if (currentView === 'detail') {
+        selectCategory(selectedCategory);
+      } else if (currentView === 'models') {
+        renderCategories();
+      }
+    }
+
+    // Safely wait until DOM is fully parsed
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderCategories);
+    } else {
+      renderCategories();
+    }
+  </script>
+</body>
+</html>
