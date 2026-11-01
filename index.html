@@ -16,7 +16,7 @@
     
     /* Category Grid */
     .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .cat-card { background: #131c2e; border: 1px solid #1e293b; border-radius: 8px; padding: 22px 14px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 85px; transition: border-color 0.15s; }
+    .cat-card { background: #131c2e; border: 1px solid #1e293b; border-radius: 8px; padding: 22px 14px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 85px; }
     .cat-card:active { background: #1e293b; border-color: #38bdf8; }
     .cat-title { font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #f1f5f9; }
 
@@ -64,116 +64,257 @@
   </div>
 
   <script>
-    let catalogData = [];
-    let currentView = 'categories';
-    let selectedCategory = null;
-
-    async function init() {
-      try {
-        const res = await fetch('/api/catalog');
-        catalogData = await res.json();
-        renderCategories();
-      } catch (e) {
-        document.getElementById('view-categories').innerHTML = '<p style="color:#ef4444; padding:20px; text-align:center;">Failed to load catalog data.</p>';
-      }
-    }
-
-    function renderCategories() {
-      const container = document.getElementById('view-categories');
-      container.innerHTML = '';
-      catalogData.forEach(c => {
-        const card = document.createElement('div');
-        card.className = 'cat-card';
-        card.onclick = () => selectCategory(c);
-        card.innerHTML = `<div class="cat-title">${c.category}</div>`;
-        container.appendChild(card);
-      });
-      showView('categories');
-    }
-
-    function selectCategory(cat) {
-      selectedCategory = cat;
-      document.getElementById('header-title').innerText = cat.category;
-      const container = document.getElementById('view-models');
-      container.innerHTML = '';
-      
-      cat.models.forEach(m => {
-        const card = document.createElement('div');
-        card.className = 'model-card';
-        card.onclick = () => renderModelDetail(m);
-        card.innerHTML = `
-          <div>
-            <div class="model-make">${m.make}</div>
-            <div class="model-name">${m.model}</div>
-          </div>
-          <div style="color:#38bdf8; font-weight:bold; font-size:1.2rem;">→</div>
-        `;
-        container.appendChild(card);
-      });
-      showView('models');
-    }
-
-    function renderModelDetail(m) {
-      document.getElementById('header-title').innerText = m.model;
-      const container = document.getElementById('view-detail');
-      
-      let html = `
-        <div class="spec-box">
-          <div class="spec-top">
-            <div>
-              <div class="model-make">${m.make}</div>
-              <h2 style="font-size:1.15rem; color:#f8fafc; font-weight:800; margin-top:2px;">${m.model}</h2>
-            </div>
-            ${m.diagram_url ? `<a href="${m.diagram_url}" target="_blank" class="diagram-btn">SCHEMATICS ↗</a>` : ''}
-          </div>
-          <div class="spec-grid">
-            <div class="spec-item"><div class="spec-label">Fuel Spec</div><div class="spec-val">${m.fuel_spec || 'N/A'}</div></div>
-            <div class="spec-item"><div class="spec-label">Spark Plug & Gap</div><div class="spec-val">${m.spark_plug}</div></div>
-            <div class="spec-item"><div class="spec-label">Oil Spec</div><div class="spec-val">${m.oil_spec} ${m.oil_capacity ? '('+m.oil_capacity+')' : ''}</div></div>
-            <div class="spec-item"><div class="spec-label">Valve Lash</div><div class="spec-val">${m.valve_lash || 'N/A'}</div></div>
-          </div>
-        </div>
-      `;
-
-      m.assemblies.forEach(a => {
-        html += `<div class="asm-title">${a.name}</div>`;
-        a.parts.forEach(p => {
-          html += `
-            <div class="part-card">
-              <div class="part-name">${p.name}</div>
-              <div class="badge-row">
-                <span class="badge badge-oem">OEM: ${p.oem}</span>
-                ${p.cross_ref ? `<span class="badge badge-cross">${p.cross_ref}</span>` : ''}
-              </div>
-              ${p.fits ? `<div><span class="part-fits">FITS: ${p.fits}</span></div>` : ''}
-              ${p.url ? `<div class="btn-row"><a href="${p.url}" target="_blank" class="buy-link">VERIFY PHOTO & BUY ↗</a></div>` : ''}
-            </div>
-          `;
-        });
-      });
-
-      container.innerHTML = html;
-      showView('detail');
-    }
-
-    function showView(view) {
-      currentView = view;
-      document.getElementById('view-categories').style.display = view === 'categories' ? 'grid' : 'none';
-      document.getElementById('view-models').style.display = view === 'models' ? 'block' : 'none';
-      document.getElementById('view-detail').style.display = view === 'detail' ? 'block' : 'none';
-      document.getElementById('back-btn').style.display = view === 'categories' ? 'none' : 'block';
-      if (view === 'categories') document.getElementById('header-title').innerText = 'SHOP MANUAL';
-    }
-
-    function navigateBack() {
-      if (currentView === 'detail') {
-        selectCategory(selectedCategory);
-      } else if (currentView === 'models') {
-        renderCategories();
-      }
-    }
-
-    init();
-  </script>
-</body>
-</html>
+    // HARDCODED IN-MEMORY DATA: No API calls, no network failure possible
+    const catalogData = [
+      {
+        "category": "Blowers",
+        "models": [
+          {
+            "id": "br-600-700",
+            "make": "Stihl",
+            "model": "BR 600 / BR 700 / BR 800",
+            "fuel_spec": "50:1 Stihl HP Ultra (89+ Octane)",
+            "spark_plug": "NGK CMR6H (Gap: 0.020 in / 0.5 mm)",
+            "oil_spec": "Fuel Pre-mix (4-MIX Engine)",
+            "valve_lash": "0.004 in (0.10 mm) Cold at TDC",
+            "diagram_url": "https://www.partstree.com/models/br-600-stihl-backpack-blower",
+            "assemblies": [
+              {
+                "name": "Intake, Fuel & Filters",
+                "parts": [
+                  {
+                    "name": "Main Air Filter (Paper Pleated)",
+                    "oem": "4282 141 0300",
+                    "cross_ref": "Stens: 102-851",
+                    "fits": "Stihl BR 500, BR 550, BR 600, BR 700",
+                    "url": "https://www.partstree.com/parts/stihl-4282-141-0300"
+                  },
+                  {
+                    "name": "In-Tank Fuel Filter (Felt Pickup)",
+                    "oem": "0000 350 3502",
+                    "cross_ref": "Stens: 610-939",
+                    "fits": "Universal across ALL Stihl Handhelds (Blowers, Trimmers, Edgers)",
+                    "url": "https://www.partstree.com/parts/stihl-0000-350-3502"
+                  },
+                  {
+                    "name": "Carburetor Metering Diaphragm Kit",
+                    "oem": "4180 007 1061",
+                    "cross_ref": "Zama: GND-88 | Stens: 615-585",
+                    "fits": "Stihl 4-MIX Zama Carbs (BR 600, FS 91, FC 91)",
+                    "url": "https://www.partstree.com/parts/zama-gnd-88"
+                  },
+                  {
+                    "name": "Bulk Fuel Line (Cut to Length)",
+                    "oem": "3/32 in ID x 3/16 in OD",
+                    "cross_ref": "Tygon / Stens: 115-303",
+                    "fits": "Standard 2-Stroke & 4-MIX fuel lines",
+                    "url": "https://www.amazon.com/dp/B000BO8UD6"
+                  },
+                  {
+                    "name": "Purge Primer Bulb Assembly",
+                    "oem": "0000 350 6201",
+                    "cross_ref": "Stens: 615-764",
+                    "fits": "Stihl BR series and FS series trimmers",
+                    "url": "https://www.partstree.com/parts/stihl-0000-350-6201"
+                  }
+                ]
+              },
+              {
+                "name": "Ignition, Shrouds & Recoil",
+                "parts": [
+                  {
+                    "name": "Spark Plug",
+                    "oem": "NGK CMR6H",
+                    "cross_ref": "Stens: 130-540",
+                    "fits": "BR 500, 600, 700, 800, FS 91 R, FC 91",
+                    "url": "https://www.amazon.com/dp/B000CSIL88"
+                  },
+                  {
+                    "name": "Ignition Coil / Module",
+                    "oem": "4282 400 1310",
+                    "cross_ref": "Rotary: 14815",
+                    "fits": "Stihl BR 500, 550, 600, 700",
+                    "url": "https://www.partstree.com/parts/stihl-4282-400-1310"
+                  },
+                  {
+                    "name": "Plastic Shroud Screws (T27 Torx)",
+                    "oem": "IS-D5x24",
+                    "cross_ref": "Stihl: 9074 478 4475",
+                    "fits": "Coarse self-tapping screw for plastic housing/fan cover",
+                    "url": "https://www.partstree.com/parts/stihl-9074-478-4475"
+                  },
+                  {
+                    "name": "Recoil Pull Cord (#3.5)",
+                    "oem": "0000 930 2203",
+                    "cross_ref": "Stens: 146-911 (3.5 mm)",
+                    "fits": "Universal Stihl handheld recoil starters",
+                    "url": "https://www.amazon.com/dp/B0038U3TT4"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "Trimmers & Edgers",
+        "models": [
+          {
+            "id": "fs-91r-fc-91",
+            "make": "Stihl",
+            "model": "FS 91 R (Trimmer) / FC 91 (Edger)",
+            "fuel_spec": "50:1 Stihl HP Ultra (89+ Octane)",
+            "spark_plug": "NGK CMR6H (Gap: 0.020 in / 0.5 mm)",
+            "oil_spec": "Fuel Pre-mix (4-MIX Engine)",
+            "valve_lash": "0.004 in (0.10 mm) Cold at TDC",
+            "diagram_url": "https://www.partstree.com/models/fs-91-r-stihl-string-trimmer",
+            "assemblies": [
+              {
+                "name": "Filters & Fuel",
+                "parts": [
+                  {
+                    "name": "4-MIX Air Filter",
+                    "oem": "4180 141 0300",
+                    "cross_ref": "Stens: 102-124",
+                    "fits": "Stihl FS 89, FS 91, FS 111, FC 91, HL 94",
+                    "url": "https://www.partstree.com/parts/stihl-4180-141-0300"
+                  },
+                  {
+                    "name": "In-Tank Fuel Filter (Felt)",
+                    "oem": "0000 350 3502",
+                    "cross_ref": "Stens: 610-939",
+                    "fits": "Universal across ALL Stihl Handhelds",
+                    "url": "https://www.partstree.com/parts/stihl-0000-350-3502"
+                  }
+                ]
+              },
+              {
+                "name": "Heads & Blades",
+                "parts": [
+                  {
+                    "name": "AutoCut 26-2 Trimmer Bump Head",
+                    "oem": "4002 710 2169",
+                    "cross_ref": "Stens: 385-591",
+                    "fits": "FS 91 R, FS 94 R, FS 111, FS 131",
+                    "url": "https://www.amazon.com/dp/B079DDCW8C"
+                  },
+                  {
+                    "name": "8-Inch Commercial Edger Blade",
+                    "oem": "4133 713 4101",
+                    "cross_ref": "Stens: 390-040",
+                    "fits": "Stihl FC 90, FC 91, FC 95, FC 110",
+                    "url": "https://www.amazon.com/dp/B0018U1IHM"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "Walk-Behind Mowers",
+        "models": [
+          {
+            "id": "exmark-21",
+            "make": "Exmark",
+            "model": "Commercial 21 (Honda GXV160)",
+            "fuel_spec": "87 Octane (Ethanol-Free preferred)",
+            "spark_plug": "NGK BPR5ES (Gap: 0.030 in / 0.75 mm)",
+            "oil_spec": "10W-30 Motor Oil",
+            "oil_capacity": "0.69 qt (22 oz)",
+            "valve_lash": "Intake: 0.006 in | Exhaust: 0.008 in Cold",
+            "diagram_url": "https://www.partstree.com/models/ecx160chn21000-exmark-21-commercial-walk-behind-mower",
+            "assemblies": [
+              {
+                "name": "Drive & Transmission",
+                "parts": [
+                  {
+                    "name": "Transmission Drive Cable",
+                    "oem": "116-4340",
+                    "cross_ref": "Stens: 290-927",
+                    "fits": "Exmark Commercial 21 self-propelled drive bail",
+                    "url": "https://www.partstree.com/parts/exmark-116-4340"
+                  },
+                  {
+                    "name": "Blade Brake Clutch (BBC) Cable",
+                    "oem": "116-4341",
+                    "cross_ref": "Exmark: 137-4759",
+                    "fits": "Exmark Commercial 21 blade stop/start control",
+                    "url": "https://www.partstree.com/parts/exmark-116-4341"
+                  },
+                  {
+                    "name": "Rear Wheel Drive Pinion (15T)",
+                    "oem": "103-5188",
+                    "cross_ref": "Exmark: 136-9111",
+                    "fits": "Inside rear drive wheels (self-propelled gear)",
+                    "url": "https://www.partstree.com/parts/exmark-103-5188"
+                  },
+                  {
+                    "name": "21-Inch High-Lift Commercial Blade",
+                    "oem": "116-3769",
+                    "cross_ref": "Stens: 355-303",
+                    "fits": "Exmark Commercial 21 walk-behind decks",
+                    "url": "https://www.amazon.com/dp/B007X6B022"
+                  }
+                ]
+              },
+              {
+                "name": "Engine Service & Filters",
+                "parts": [
+                  {
+                    "name": "Dual Element Air Filter",
+                    "oem": "17211-ZE7-W03",
+                    "cross_ref": "Stens: 100-784",
+                    "fits": "Honda GXV160 vertical-shaft engines",
+                    "url": "https://www.partstree.com/parts/honda-17211-ze7-w03"
+                  },
+                  {
+                    "name": "Spark Plug",
+                    "oem": "NGK BPR5ES",
+                    "cross_ref": "Stens: 130-014",
+                    "fits": "Honda GXV160 / GX series",
+                    "url": "https://www.amazon.com/dp/B000CSIL6K"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "Zero-Turn Mowers",
+        "models": [
+          {
+            "id": "exmark-lazer-z",
+            "make": "Exmark",
+            "model": "Lazer Z 60 (Kawasaki FX730V)",
+            "fuel_spec": "87 Octane (Ethanol-Free preferred)",
+            "spark_plug": "NGK BPR4ES (Gap: 0.030 in / 0.75 mm)",
+            "oil_spec": "10W-40 Synthetic Blend",
+            "oil_capacity": "2.1 qt (with filter)",
+            "valve_lash": "0.004 - 0.006 in Cold",
+            "diagram_url": "https://www.partstree.com/models/lzs730gka604a1-exmark-lazer-z-s-series-zero-turn-mower-60-deck",
+            "assemblies": [
+              {
+                "name": "Engine Service & Filters",
+                "parts": [
+                  {
+                    "name": "Engine Oil Filter (Spin-on)",
+                    "oem": "49065-0721",
+                    "cross_ref": "Wix: 51394 | Stens: 120-435",
+                    "fits": "Kawasaki FX691V, FX730V, FR/FS commercial engines",
+                    "url": "https://www.amazon.com/dp/B000BPEUBW"
+                  },
+                  {
+                    "name": "Heavy-Duty Canister Air Filter",
+                    "oem": "11013-7044",
+                    "cross_ref": "Stens: 102-805",
+                    "fits": "Kawasaki FX heavy-duty dual canister systems",
+                    "url": "https://www.partstree.com/parts/kawasaki-11013-7044"
+                  },
+                  {
+                    "name": "In-Line Fuel Filter",
+                    "oem": "49019-0027",
+                    "cross_ref": "Stens: 120-562",
+                    "fits": "Fits 1/4 in and 5/16 in fuel lines",
+                    "url": "
